@@ -136,6 +136,7 @@ func (a *Agent) collectProfile(ctx context.Context, ptype profile.ProfileType, b
 		return fmt.Errorf("unknown profile type %v", ptype)
 	}
 
+	a.logf("type is %v len is %d", ptype, buf.Len())
 	return nil
 }
 
