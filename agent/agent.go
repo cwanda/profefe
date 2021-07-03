@@ -136,7 +136,6 @@ func (a *Agent) collectProfile(ctx context.Context, ptype profile.ProfileType, b
 		return fmt.Errorf("unknown profile type %v", ptype)
 	}
 
-	a.logf("type is %v len is %d", ptype, buf.Len())
 	return nil
 }
 
@@ -216,8 +215,12 @@ func (a *Agent) collectAndSend(ctx context.Context) {
 		case <-timer.C:
 			if err := a.collectProfile(ctx, ptype, &buf); err != nil {
 				a.logf("[FAIL] unable to collect profiles: %v", err)
-			} else if err := a.sendProfile(ctx, ptype, &buf); err != nil {
-				a.logf("[FAIL] unable to send profiles: %v", err)
+			} else {
+				dataLen := buf.Len()
+				a.logf("sending type %v len is %d", ptype, buf.Len())
+				if err := a.sendProfile(ctx, ptype, &buf); err != nil {
+					a.logf("[FAIL] unable to send profiles %v len %d: %v", ptype, dataLen, err)
+				}
 			}
 
 			buf.Reset()
