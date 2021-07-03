@@ -217,7 +217,7 @@ func (a *Agent) collectAndSend(ctx context.Context) {
 				a.logf("[FAIL] unable to collect profiles: %v", err)
 			} else {
 				dataLen := buf.Len()
-				a.logf("sending type %v len is %d", ptype, buf.Len())
+				a.logf(" going to send type %v len is %d", ptype, buf.Len())
 				if err := a.sendProfile(ctx, ptype, &buf); err != nil {
 					a.logf("[FAIL] unable to send profiles %v len %d: %v", ptype, dataLen, err)
 				}
