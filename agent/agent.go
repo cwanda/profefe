@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"runtime/pprof"
+	"runtime/trace"
 	"strings"
 	"sync"
 	"time"
@@ -52,6 +53,8 @@ type Agent struct {
 	MutexProfile        bool
 	GoroutineProfile    bool
 	ThreadcreateProfile bool
+	Trace               bool
+	TraceDuration       time.Duration
 
 	service   string
 	rawLabels strings.Builder
@@ -132,6 +135,13 @@ func (a *Agent) collectProfile(ctx context.Context, ptype profile.ProfileType, b
 		if err != nil {
 			return fmt.Errorf("failed to write %s profile: %v", ptype, err)
 		}
+	case profile.TypeTrace:
+		err := trace.Start(buf)
+		if err != nil {
+			return fmt.Errorf("failed to start trace: %v", err)
+		}
+		sleep(a.TraceDuration, ctx.Done())
+		trace.Stop()
 	default:
 		return fmt.Errorf("unknown profile type %v", ptype)
 	}
@@ -139,11 +149,16 @@ func (a *Agent) collectProfile(ctx context.Context, ptype profile.ProfileType, b
 	return nil
 }
 
-func (a *Agent) sendProfile(ctx context.Context, ptype profile.ProfileType, buf *bytes.Buffer) error {
+func (a *Agent) sendProfile(ctx context.Context, ptype profile.ProfileType, createdAt time.Time, buf *bytes.Buffer) error {
 	q := url.Values{}
 	q.Set("service", a.service)
 	q.Set("labels", a.rawLabels.String())
 	q.Set("type", ptype.String())
+
+	// Set create time for trace
+	if ptype == profile.TypeTrace {
+		q.Set("created_at", createdAt.Format("2006-01-02T15:04:05"))
+	}
 
 	surl := a.collectorAddr + "/api/0/profiles?" + q.Encode()
 	req, err := http.NewRequest(http.MethodPost, surl, buf)
@@ -213,12 +228,13 @@ func (a *Agent) collectAndSend(ctx context.Context) {
 			}
 			return
 		case <-timer.C:
+			createdAt := time.Now().UTC()
 			if err := a.collectProfile(ctx, ptype, &buf); err != nil {
 				a.logf("[FAIL] unable to collect profiles: %v", err)
 			} else {
 				// XXX WANDA add debug
 				a.logf(" going to send type %v len is %d", ptype, buf.Len())
-				if err := a.sendProfile(ctx, ptype, &buf); err != nil {
+				if err := a.sendProfile(ctx, ptype, createdAt, &buf); err != nil {
 					a.logf("[FAIL] unable to send profiles: %v", err)
 				}
 			}
@@ -272,6 +288,11 @@ func (a *Agent) nextProfileType(ptype profile.ProfileType) profile.ProfileType {
 				return ptype
 			}
 		case profile.TypeThreadcreate:
+			ptype = profile.TypeTrace
+			if a.Trace {
+				return ptype
+			}
+		case profile.TypeTrace:
 			ptype = profile.TypeCPU
 			if a.CPUProfile {
 				return ptype

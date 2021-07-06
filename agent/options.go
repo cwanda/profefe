@@ -21,6 +21,13 @@ func WithCPUProfile(duration time.Duration) Option {
 	}
 }
 
+func WithTrace(duration time.Duration) Option {
+	return func(a *Agent) {
+		a.Trace = true
+		a.TraceDuration = duration
+	}
+}
+
 func WithHeapProfile() Option {
 	return func(a *Agent) {
 		a.HeapProfile = true
