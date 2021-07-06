@@ -216,10 +216,10 @@ func (a *Agent) collectAndSend(ctx context.Context) {
 			if err := a.collectProfile(ctx, ptype, &buf); err != nil {
 				a.logf("[FAIL] unable to collect profiles: %v", err)
 			} else {
-				dataLen := buf.Len()
+				// XXX WANDA add debug
 				a.logf(" going to send type %v len is %d", ptype, buf.Len())
 				if err := a.sendProfile(ctx, ptype, &buf); err != nil {
-					a.logf("[FAIL] unable to send profiles %v len %d: %v", ptype, dataLen, err)
+					a.logf("[FAIL] unable to send profiles: %v", err)
 				}
 			}
 
@@ -277,6 +277,7 @@ func (a *Agent) nextProfileType(ptype profile.ProfileType) profile.ProfileType {
 				return ptype
 			}
 		}
+
 	}
 }
 

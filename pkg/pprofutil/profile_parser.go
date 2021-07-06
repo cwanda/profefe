@@ -50,9 +50,11 @@ func (pr *ProfileParser) ParseProfile() (prof *pprofProfile.Profile, err error) 
 		return nil, &ProfileParserError{err}
 	}
 	if len(pr.prof.Sample) == 0 {
+		// XXX Wanda DEBUG
 		fmt.Printf("NO SAMPLE PPROF STRING %s\n", pr.prof.String())
 		return nil, &ProfileParserError{fmt.Errorf("profile is empty: no samples")}
 	}
+	// XXX Wanda DEBUG
 	fmt.Printf("HAVE SAMPLE PPROF STRING %s\n", pr.prof.String())
 	return pr.prof, nil
 }

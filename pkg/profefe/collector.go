@@ -36,6 +36,7 @@ func (c *Collector) WriteProfile(ctx context.Context, params *storage.WriteProfi
 		return Profile{}, err
 	}
 
+	// XXX WANDA DEBUG
 	fmt.Printf("WRITE PROFILE len of profile type %v len %d\n", params.Type, len(data))
 	parser := pprofutil.NewProfileParser(data)
 
