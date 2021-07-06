@@ -36,7 +36,7 @@ func (c *Collector) WriteProfile(ctx context.Context, params *storage.WriteProfi
 		return Profile{}, err
 	}
 
-	c.logger.Debugw("len of profile type ", params.Type, "len ", len(data))
+	fmt.Printf("WRITE PROFILE len of profile type %v len %d\n", params.Type, len(data))
 	parser := pprofutil.NewProfileParser(data)
 
 	pp, err := parser.ParseProfile()
