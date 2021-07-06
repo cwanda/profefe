@@ -49,6 +49,7 @@ func (pr *ProfileParser) ParseProfile() (prof *pprofProfile.Profile, err error) 
 	if err != nil {
 		return nil, &ProfileParserError{err}
 	}
+	fmt.Printf("pprof string %s", pr.prof.String())
 	if len(pr.prof.Sample) == 0 {
 		return nil, &ProfileParserError{fmt.Errorf("profile is empty: no samples")}
 	}
